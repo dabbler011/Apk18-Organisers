@@ -1,4 +1,4 @@
-package org.aparoksha18.organisers
+package org.aparoksha18.organisers.fragments
 
 import android.app.Fragment
 import android.os.Bundle
@@ -10,6 +10,9 @@ import android.widget.LinearLayout
 import com.squareup.okhttp.OkHttpClient
 import com.squareup.okhttp.Request
 import kotlinx.android.synthetic.main.fragment_approve.*
+import org.aparoksha18.organisers.models.Notification
+import org.aparoksha18.organisers.R
+import org.aparoksha18.organisers.adapters.ApproveAdapter
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import org.json.JSONObject
@@ -50,12 +53,12 @@ class ApproveFragment: Fragment() {
         doAsync {
             val client = OkHttpClient()
             val request = Request.Builder()
-                    .url("https://aparoksha-18.firebaseio.com/pending.json")
+                    .url("https://aparoksha-18.firebaseio.com/notifications.json")
                     .build()
             val response = client.newCall(request).execute()
             try {
                 if (response.isSuccessful) {
-                    val updatesList: MutableMap<String,Notification> = mutableMapOf()
+                    val updatesList: MutableMap<String, Notification> = mutableMapOf()
                     val body = JSONObject(response.body()?.string())
                     val keys = body.keys()
 
@@ -68,12 +71,20 @@ class ApproveFragment: Fragment() {
                             newNotification.senderName = childObj.getString("senderName")
                             newNotification.timestamp = childObj.getLong("timestamp")
                             newNotification.title = childObj.getString("title")
-                            updatesList.put(key,newNotification)
+                            newNotification.eventID = childObj.getInt("eventID")
+                            newNotification.verified = childObj.getBoolean("verified")
+
+                            if (!newNotification.verified) updatesList.put(key,newNotification)
                         }
                     }
                     uiThread {
                         noNotifsTV?.visibility = View.GONE
                         updatesRV?.visibility = View.VISIBLE
+                        if(updatesList.isEmpty()) {
+                            noNotifsTV?.visibility = View.VISIBLE
+                            noNotifsTV?.text = "No Notifications !!"
+                            updatesRV?.visibility = View.GONE
+                        }
                         updatesAdapter.updateData(updatesList)
                     }
                 }

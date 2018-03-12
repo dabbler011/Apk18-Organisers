@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/new_notification"
         android:icon="@drawable/ic_send_black_24dp"
-        android:title="Send Notification"/>
+        android:title="NEW"/>
 
     <item android:id="@+id/sent_notifications"
         android:icon="@drawable/ic_notifications_black_24dp"
-        android:title="Old Notifications"/>
+        android:title="PREVIOUS"/>
 
 </menu>

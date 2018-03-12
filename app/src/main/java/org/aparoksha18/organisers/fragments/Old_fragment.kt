@@ -1,9 +1,8 @@
-package org.aparoksha18.organisers
+package org.aparoksha18.organisers.fragments
 
 import android.app.Fragment
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +10,9 @@ import android.widget.LinearLayout
 import kotlinx.android.synthetic.main.fragment_old.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.aparoksha18.organisers.models.Notification
+import org.aparoksha18.organisers.R
+import org.aparoksha18.organisers.adapters.UpdatesAdapter
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import org.json.JSONObject
@@ -68,7 +70,10 @@ class Old_fragment: Fragment() {
                             newNotification.senderName = childObj.getString("senderName")
                             newNotification.timestamp = childObj.getLong("timestamp")
                             newNotification.title = childObj.getString("title")
-                            updatesList.add(newNotification)
+                            newNotification.eventID = childObj.getInt("eventID")
+                            newNotification.verified = childObj.getBoolean("verified")
+
+                            if (newNotification.verified) updatesList.add(newNotification)
                         }
                     }
                     uiThread {

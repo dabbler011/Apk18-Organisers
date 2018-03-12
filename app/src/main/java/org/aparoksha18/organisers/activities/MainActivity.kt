@@ -1,4 +1,4 @@
-package org.aparoksha18.organisers
+package org.aparoksha18.organisers.activities
 
 import android.app.Fragment
 import android.support.v7.app.AppCompatActivity
@@ -9,6 +9,10 @@ import android.view.MenuItem
 import android.view.View
 import com.firebase.ui.auth.AuthUI
 import kotlinx.android.synthetic.main.activity_main.*
+import org.aparoksha18.organisers.fragments.NewFragment
+import org.aparoksha18.organisers.fragments.Old_fragment
+import org.aparoksha18.organisers.R
+import org.aparoksha18.organisers.fragments.ApproveFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,13 +21,13 @@ class MainActivity : AppCompatActivity() {
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.new_notification -> {
-                val newFragment = Fragment.instantiate(baseContext,NewFragment::class.java.name)
+                val newFragment = Fragment.instantiate(this, NewFragment::class.java.name)
                         as NewFragment
                 fragmentManager.beginTransaction().replace(R.id.fragment,newFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.sent_notifications -> {
-                val oldFragment = Fragment.instantiate(baseContext,Old_fragment::class.java.name)
+                val oldFragment = Fragment.instantiate(this, Old_fragment::class.java.name)
                         as Old_fragment
                 fragmentManager.beginTransaction().replace(R.id.fragment,oldFragment).commit()
                 return@OnNavigationItemSelectedListener true
@@ -35,19 +39,19 @@ class MainActivity : AppCompatActivity() {
     private val mOnAdminNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.new_notification -> {
-                val newFragment = Fragment.instantiate(this,NewFragment::class.java.name)
+                val newFragment = Fragment.instantiate(this, NewFragment::class.java.name)
                         as NewFragment
                 fragmentManager.beginTransaction().replace(R.id.fragment,newFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.sent_notifications -> {
-                val oldFragment = Fragment.instantiate(this,Old_fragment::class.java.name)
+                val oldFragment = Fragment.instantiate(this, Old_fragment::class.java.name)
                         as Old_fragment
                 fragmentManager.beginTransaction().replace(R.id.fragment,oldFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.approve_notifications -> {
-                val approveFragment = Fragment.instantiate(this,ApproveFragment::class.java.name)
+                val approveFragment = Fragment.instantiate(this, ApproveFragment::class.java.name)
                         as ApproveFragment
                 fragmentManager.beginTransaction().replace(R.id.fragment,approveFragment).commit()
                 return@OnNavigationItemSelectedListener true
@@ -74,7 +78,7 @@ class MainActivity : AppCompatActivity() {
             navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
         }
 
-        val newFragment = Fragment.instantiate(this,NewFragment::class.java.name)
+        val newFragment = Fragment.instantiate(this, NewFragment::class.java.name)
                 as NewFragment
         fragmentManager.beginTransaction().replace(R.id.fragment,newFragment).commit()
     }

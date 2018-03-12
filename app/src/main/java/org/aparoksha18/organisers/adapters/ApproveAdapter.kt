@@ -1,4 +1,4 @@
-package org.aparoksha18.organisers
+package org.aparoksha18.organisers.adapters
 
 import android.app.ProgressDialog
 import android.content.Context
@@ -13,6 +13,9 @@ import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.aparoksha18.organisers.R
+import org.aparoksha18.organisers.models.Notification
+import org.aparoksha18.organisers.utils.AppDB
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.text.SimpleDateFormat
@@ -24,8 +27,9 @@ import kotlin.collections.ArrayList
  */
 
 class ApproveAdapter : RecyclerView.Adapter<ApproveAdapter.ViewHolder>() {
-    var list: Map<String,Notification> = mapOf()
+    var list: MutableMap<String, Notification> = mutableMapOf()
     var keyList = ArrayList<String>()
+
     private lateinit var context: Context
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
@@ -35,13 +39,19 @@ class ApproveAdapter : RecyclerView.Adapter<ApproveAdapter.ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bindItem(list.getValue(keyList[position]),keyList[position],context)
+        holder.bindItem(list.getValue(keyList[position]),keyList[position],context,this)
     }
 
     fun updateData(map: Map<String,Notification>){
-        list = map
+        list = map as MutableMap<String, Notification>
         keyList.clear()
         keyList.addAll(list.keys)
+        notifyDataSetChanged()
+    }
+
+    fun remove(key: String) {
+        keyList.remove(key)
+        list.remove(key)
         notifyDataSetChanged()
     }
 
@@ -49,27 +59,18 @@ class ApproveAdapter : RecyclerView.Adapter<ApproveAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        fun  bindItem(notification: Notification, key: String,context: Context) {
+        fun  bindItem(notification: Notification, key: String,context: Context,adapter: ApproveAdapter) {
             itemView.tv_title.text = notification.title
             itemView.tv_description.text = notification.description
-
-            val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/India"))
-            calendar.timeInMillis = notification.timestamp.times(1000L)
-
-            val sdf = SimpleDateFormat("hh:mm a")
-            //sdf.timeZone = TimeZone.getTimeZone("Asia/India")
-
-            val time = sdf.format(calendar.time)
-
-            sdf.applyPattern("MMM d")
-            itemView.tv_timestamp.text = notification.timestamp.toString()
-            itemView.tv_timestamp.text = "$time ${sdf.format(calendar.time)}"
+            itemView.sender.text = notification.senderName
 
             itemView.imageButton2.setOnClickListener {
+                adapter.remove(key)
                 deleteFromPending(key,context)
             }
 
             itemView.imageButton.setOnClickListener {
+                adapter.remove(key)
                 sendNotification(notification.title,notification.description,key,context)
             }
         }
@@ -79,65 +80,39 @@ class ApproveAdapter : RecyclerView.Adapter<ApproveAdapter.ViewHolder>() {
             dialog.setTitle("Sending notification...")
             dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
             dialog.show()
+            val appDB = AppDB.getInstance(context)
+            val events = appDB.getAllEvents()
+            val eventID = events.find { it.name.equals(message) }!!.id
+
             doAsync {
                 try {
-                    val GCM_API_KEY = context.getString(R.string.GCM_KEY)
-                    val JSON: MediaType = MediaType.parse("application/json; charset=utf-8")!!
-
+                    val JSON: MediaType = MediaType.parse("application/json; charset=utf-8")!!;
                     val client = OkHttpClient()
 
-                    val bodyString = "{\n" +
-                            "  \"to\": \"/topics/all\",\n" +
-                            "   \"priority\": \"high\",\n" +
-                            "  \"notification\": {\n" +
-                            "    \"title\": \"" + message + "\","  +
-                            "    \"body\": \"" + description + "\"," +
-                            "  \"sound\": \"default\"," +
-                            "   }\n" +
-                            "}"
+                    val bodyString = "{\"description\":\"" + description + "\",\"senderName\":\""+
+                            FirebaseAuth.getInstance().currentUser!!.email +"\",\"timestamp\":" +
+                            System.currentTimeMillis() + ",\"title\":\"" +message + "\",\"verified\":" +
+                            true + ",\"eventID\":" + eventID + "}"
 
                     val body = RequestBody.create(JSON,bodyString)
-
-                    val request = Request.Builder()
-                            .url("https://fcm.googleapis.com/fcm/send")
-                            .header("Content-Type","application/json")
-                            .header("Authorization", "key=" + GCM_API_KEY)
-                            .post(body)
-                            .build()
-                    val response = client.newCall(request).execute()
-                    if(response.isSuccessful){
-                        val JSON: MediaType = MediaType.parse("application/json; charset=utf-8")!!;
-
-                        val client = OkHttpClient()
-
-                        val bodyString = "{\"description\":\"" + description + "\",\"senderName\":\""+ FirebaseAuth.getInstance().currentUser!!.email +"\",\"timestamp\":" + System.currentTimeMillis() + ",\"title\":\"" +message + "\"}"
-
-                        val body = RequestBody.create(JSON,bodyString)
-                        try {
-                            val request = Request.Builder()
-                                    .url("https://aparoksha-18.firebaseio.com/notifications.json")
-                                    .post(body)
-                                    .build()
-                            val response = client.newCall(request).execute()
-                            if(response.isSuccessful) {
-                                uiThread {
-                                    dialog.dismiss()
-                                    deleteFromPending(key,context)
-                                }
-                            }
-
-                        } catch (e : Exception) {
+                    try {
+                        val request = Request.Builder()
+                                .url("https://aparoksha-18.firebaseio.com/notifications/"+key+".json")
+                                .put(body)
+                                .build()
+                        val response = client.newCall(request).execute()
+                        if(response.isSuccessful) {
                             uiThread {
                                 dialog.dismiss()
                             }
                         }
-                    }
-                    else {
+
+                    } catch (e : Exception) {
                         uiThread {
                             dialog.dismiss()
                         }
                     }
-                }catch (e: Exception) {
+                } catch (e: Exception) {
                     uiThread {
                         dialog.dismiss()
                     }
@@ -155,12 +130,13 @@ class ApproveAdapter : RecyclerView.Adapter<ApproveAdapter.ViewHolder>() {
 
                 try {
                     val request = Request.Builder()
-                            .url("https://aparoksha-18.firebaseio.com/pending/"+key+".json")
+                            .url("https://aparoksha-18.firebaseio.com/notifications/"+key+".json")
                             .delete()
                             .build()
                     val response = client.newCall(request).execute()
                     if (response.isSuccessful) {
                         uiThread {
+
                             dialog.dismiss()
                         }
                     }

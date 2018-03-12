@@ -1,11 +1,12 @@
-package org.aparoksha18.organisers
+package org.aparoksha18.organisers.adapters
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.notification_container.view.*
-import java.text.SimpleDateFormat
+import org.aparoksha18.organisers.models.Notification
+import org.aparoksha18.organisers.R
 import java.util.*
 
 /**
@@ -35,18 +36,6 @@ class UpdatesAdapter : RecyclerView.Adapter<UpdatesAdapter.ViewHolder>() {
         fun  bindItem(notification: Notification) {
             itemView.tv_title.text = notification.title
             itemView.tv_description.text = notification.description
-
-            val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/India"))
-            calendar.timeInMillis = notification.timestamp.times(1000L)
-
-            val sdf = SimpleDateFormat("hh:mm a")
-            //sdf.timeZone = TimeZone.getTimeZone("Asia/India")
-
-            val time = sdf.format(calendar.time)
-
-            sdf.applyPattern("MMM d")
-            itemView.tv_timestamp.text = notification.timestamp.toString()
-            itemView.tv_timestamp.text = "$time ${sdf.format(calendar.time)}"
         }
     }
 

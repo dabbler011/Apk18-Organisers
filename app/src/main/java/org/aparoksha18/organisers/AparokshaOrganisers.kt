@@ -1,6 +1,7 @@
 package org.aparoksha18.organisers
 
 import android.app.Application
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
 
 /**
@@ -12,7 +13,8 @@ class AparokshaOrganisers: Application() {
     override fun onCreate() {
         super.onCreate()
 
-        FirebaseMessaging.getInstance().subscribeToTopic("all")
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
+        //FirebaseMessaging.getInstance().subscribeToTopic("all")
 
     }
 }
