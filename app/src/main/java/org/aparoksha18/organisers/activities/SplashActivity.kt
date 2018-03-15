@@ -79,14 +79,13 @@ class SplashActivity : AppCompatActivity() {
 
             try {
                 val request = Request.Builder()
-                        .url("https://aparoksha18.github.io/Aparoksha-Data/events.json")
+                        .url("https://aparoksha18.github.io/Aparoksha-Data/data/events.json")
                         .build()
 
 
                 val response = client.newCall(request).execute()
 
                 if (response.isSuccessful) {
-                    Log.d("akshat",response.body()?.string())
                     val list = Moshi.Builder()
                             .build()
                             .adapter<Array<Event>>(Array<Event>::class.java)
@@ -154,7 +153,7 @@ class SplashActivity : AppCompatActivity() {
         if (user != null) {
 
             val db = FirebaseFirestore.getInstance()
-            if(user.email.toString().endsWith("@iiita.ac.in",false) || user.email.toString().endsWith("@iiitl.ac.in",false)) {
+            if(user.email.toString().endsWith("@iiita.ac.in",false) || user.email.toString().contains("@iiitl.ac.in",false)) {
                 db.collection("admins")
                         .document(user.email.toString())
                         .get()

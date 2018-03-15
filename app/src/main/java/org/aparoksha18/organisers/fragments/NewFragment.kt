@@ -3,6 +3,7 @@ package org.aparoksha18.organisers.fragments
 import android.app.Fragment
 import android.app.ProgressDialog
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.google.firebase.auth.FirebaseAuth
+import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.fragment_new.view.*
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -20,7 +22,10 @@ import org.jetbrains.anko.toast
 import org.jetbrains.anko.uiThread
 import kotlinx.android.synthetic.main.fragment_new.*
 import org.aparoksha18.organisers.R
+import org.aparoksha18.organisers.activities.QRScannerActivity
 import org.aparoksha18.organisers.utils.AppDB
+import org.json.JSONException
+import org.json.JSONObject
 
 
 /**
@@ -36,6 +41,10 @@ class NewFragment :Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        scanQRBtn.setOnClickListener {
+            initScanner()
+        }
 
         val appDb = AppDB.getInstance(context)
 
@@ -71,9 +80,18 @@ class NewFragment :Fragment() {
                 sendNotification(name,description, eventsList.find { it.name.equals(name) }!!.id)
                 view.description_text.setText("")
             } else {
-                Toast.makeText(activity,"Either title or description is empty",Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity,"message is empty",Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun initScanner() {
+        val qrScan = IntentIntegrator(activity)
+        qrScan.setOrientationLocked(false)
+        qrScan.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES)
+        qrScan.setPrompt("Scan QR of the user")
+        qrScan.captureActivity = QRScannerActivity::class.java
+        qrScan.initiateScan()
     }
 
     fun sendNotification(message: String,description: String,eventID: Long) {
@@ -119,6 +137,33 @@ class NewFragment :Fragment() {
                     Toast.makeText(activity, "Exception ", Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+
+        if (result != null) {
+            if (result.contents == null) toast("Result not found")
+            else {
+                try {
+                    val obj = JSONObject(result.contents)
+
+                    toast(obj.toString())
+
+                    val id = obj.getString("id")
+                    val name = obj.getString("name")
+                    val email = obj.getString("email")
+
+                    toast(id+name+email)
+
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                }
+
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
         }
     }
 }
